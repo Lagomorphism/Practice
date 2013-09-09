@@ -1,51 +1,59 @@
-$(function() {
+(function($){
 	var User = Backbone.Model.extend({
-		
 		defaults: {
-			id: '1',
+			displayName: 'JohnDoe',
 			login: 'johndoe@hotmail.com',
-			displayName: 'JohnDoe123',
-			password: '',
-			created: new Date().getTime(),
-			lastVisit: new Date().getTime()
+			created: getTimeStamp(),
+			lastUpdated: getTimeStamp(),
+			lastLogin: getTimeStamp()
+
 		}
-		//el: $('body'), // Attaches 'this.el' to an existing element.
-		//initialize: function() {
-		//	_.bindAll(this, 'render'); // Fixes loss of context for 'this' within methods.
-		//	this.render(); // Not all views are self-rendering. This one is.
-		//},
-		//render: function() {
-		//	$(this.el).append('<ul><li>Hello world! ' + getTimeStamp() + '</li></ul>');
-		//}
 	});
 
-	var UserView = Backbone.View.extend({
-		// Every Backbone.js view has an 'el' property, and if not defined, Backbone will construct its own as an empty div element.
-		el: $('#userInfo'),
+	var List = Backbone.Collection.extend({
+		model: User
+	});
+
+	var ListView = Backbone.View.extend({
+		el: $('body'),
+		events: {'click button#add': 'addItem'},
 		initialize: function() {
+			_.bindAll(this, 'render', 'addItem', 'appendItem');
+
+			this.collection = new List();
+			this.collection.bind('add', this.appendItem); // Collection event binder.
+
+			this.counter = 0;
 			this.render();
 		},
-		tagName: 'div',
-		className: 'userInfo',
 		render: function() {
-			this.el.innerHTML = this.model.get('displayName')
-			return this;
+			var self = this;
+			$(this.el).append('<button id="add">Add user</button>');
+			$(this.el).append('<ul></ul>');
+			_(this.collection.models).each(function(user) {
+				self.appendItem(user);
+			}, this);
+		},
+
+		addItem: function() {
+			this.counter++;
+			var user = new User();
+			//user.set({ part2: user.get('part2') + this.counter });
+			user.set({ displayName: user.get('displayName') + this.counter });
+			user.set({ login: user.get('login') + this.counter });
+			//user.set({ created: 'abc' });
+			//user.set({ lastUpdated: 'abc' });
+			//user.set({ lastLogin: 'abc' });
+
+
+			this.collection.add(user); // Add user to collection. View is updated via event 'add'.
+		},
+		appendItem: function(user){
+			$('ul', this.el).append('<li>' + user.get('displayName') + ' ' + user.get('lastLogin') + '</li>');
 		}
 	});
 
-	var johnDoe = new User({
-		id: '123',
-		login: 'johndoe@gmail.com',
-		displayName: 'JohnDoe',
-		password: 'abc'
-	});
-
-	var userView = new UserView({
-		model: johnDoe
-	});
-
-
-	var user =  new User();
+	var listView = new ListView();
 
 	function getTimeStamp() {
 		var now = new Date();
@@ -57,4 +65,5 @@ $(function() {
 			((now.getMinutes() < 10) ? '0' + now.getMinutes() : now.getMinutes()) + ':' +
 			((now.getSeconds() < 10) ? '0' + now.getSeconds() : now.getSeconds()));
 	};
-})(jquery);
+
+})(jQuery);
